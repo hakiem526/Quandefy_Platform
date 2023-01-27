@@ -10,12 +10,18 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY
 
 const provider = new ethers.providers.JsonRpcProvider(INFURA_URL)
 
-const poolAddress = '0x4585fe77225b41b697c938b018e2ac67ac5a20c0' // WBTC/ETH pool
+const poolAddressWbtcEth = '0x4585fe77225b41b697c938b018e2ac67ac5a20c0' // WBTC/ETH pool
 
 const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
 
-const getPrice = async(inputAmount) => {
-    // How many ETH per 1 unit token
+const initQuoterAndTokenPairs = async(poolAddress) => {
+
+    const quoterContract = new ethers.Contract(
+        quoterAddress,
+        QuoterABI,
+        provider
+    )
+
     const poolContract = new ethers.Contract(
         poolAddress,
         IUniswapV3PoolABI,
@@ -45,13 +51,13 @@ const getPrice = async(inputAmount) => {
     const tokenDecimals0 = await tokenContract0.decimals()
     const tokenDecimals1 = await tokenContract1.decimals()
 
-    const quoterContract = new ethers.Contract(
-        quoterAddress,
-        QuoterABI,
-        provider
-    )
-
     const immutables = await getPoolImmutables(poolContract)
+
+    return [quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables]
+}
+
+const getPrice = async(inputAmount, quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+    // How many token1 per inputAmount token0
 
     const amountIn = ethers.utils.parseUnits(
         inputAmount.toString(),
@@ -73,4 +79,9 @@ const getPrice = async(inputAmount) => {
     console.log('=========')
 }
 
-getPrice(1)
+let quoterContract, tokenSymbolWbtc, tokenSymbolEth, tokenDecimalsWbtc, tokenDecimalsEth, immutablesWbtcEth
+initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
+    [quoterContract, tokenSymbolWbtc, tokenSymbolEth, tokenDecimalsWbtc, tokenDecimalsEth, immutablesWbtcEth] = result
+    getPrice(1, quoterContract, tokenSymbolWbtc, tokenSymbolEth, tokenDecimalsWbtc, tokenDecimalsEth, immutablesWbtcEth)
+})
+
