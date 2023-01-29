@@ -125,12 +125,12 @@ const getPrice = async(inputAmount, quoterContract, tokenSymbol0, tokenSymbol1, 
 
 let quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
-    [quoterContract, tokenSymbolWbtc, tokenSymbolEth, tokenDecimalsWbtc, tokenDecimalsEth, immutablesWbtcEth] = result
+    [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
     getPrice(1, quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
 })
 
 let quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
-    [quoterContract, tokenSymbolWbtc, tokenSymbolEth, tokenDecimalsWbtc, tokenDecimalsEth, immutablesWbtcEth] = result
+    [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
     getPrice(1, quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth)
 })
