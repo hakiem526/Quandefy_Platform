@@ -98,8 +98,9 @@ const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
 }
 
 
-const getPrice = async(inputAmount, quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
     // How many token1 per inputAmount token0
+    const inputAmount = 1
 
     const amountIn = ethers.utils.parseUnits(
         inputAmount.toString(),
@@ -116,9 +117,51 @@ const getPrice = async(inputAmount, quoterContract, tokenSymbol0, tokenSymbol1, 
 
     const amountOut = ethers.utils.formatUnits(quotedAmountOut, tokenDecimals1)
 
-    console.log('=========')
+    console.log('=====================================================================')
     console.log(`${inputAmount} ${tokenSymbol0} can be swapped for ${amountOut} ${tokenSymbol1}`)
-    console.log('=========')
+    console.log(new Date().toLocaleString());
+    console.log('=====================================================================')
+
+    setTimeout(function() {
+        getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
+
+        // Every 1 sec
+    }, 1000);
+
+}
+
+const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+    // How many token1 per inputAmount token0
+    const inputAmount = 1
+
+    const amountIn = ethers.utils.parseUnits(
+        inputAmount.toString(),
+        tokenDecimals0
+    )
+
+    const quotedAmountOut = await quoterContract.callStatic.quoteExactInputSingle(
+        immutables.token0,
+        immutables.token1,
+        immutables.fee,
+        amountIn,
+        0
+    )
+
+    const amountOut = ethers.utils.formatUnits(quotedAmountOut, tokenDecimals1)
+
+    const outputAmount = inputAmount / amountOut
+
+    console.log('=====================================================================')
+    console.log(`${inputAmount} ${tokenSymbol1} can be swapped for ${outputAmount} ${tokenSymbol0}`)
+    console.log(new Date().toLocaleString());
+    console.log('=====================================================================')
+
+    setTimeout(function() {
+        getPriceUsdcEth(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
+
+        // Every 1 sec
+    }, 1000);
+
 }
 
 /******************  MAIN ******************/
@@ -126,11 +169,11 @@ const getPrice = async(inputAmount, quoterContract, tokenSymbol0, tokenSymbol1, 
 let quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
     [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
-    getPrice(1, quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
+    getPrice(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
 })
 
 let quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
     [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
-    getPrice(1, quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth)
+    getPriceUsdcEth(quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth)
 })
