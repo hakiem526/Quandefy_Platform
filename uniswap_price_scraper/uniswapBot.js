@@ -17,6 +17,8 @@ const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
 
 const initQuoterAndTokenPairs = async(poolAddress) => {
 
+    console.log(`Initializing quoter and token pair for address ${poolAddress}...`)
+
     const quoterContract = new ethers.Contract(
         quoterAddress,
         QuoterABI,
@@ -58,6 +60,9 @@ const initQuoterAndTokenPairs = async(poolAddress) => {
 }
 
 const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
+
+    console.log(`Initializing quoter and USDC/ETH token pair...`)
+
     const quoterContract = new ethers.Contract(
         quoterAddress,
         QuoterABI,
@@ -99,6 +104,9 @@ const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
 }
 
 const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
+
+    console.log(`Initializing quoter and WBTC/USDC token pair...`)
+
     const quoterContract = new ethers.Contract(
         quoterAddress,
         QuoterABI,
@@ -140,7 +148,8 @@ const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
 }
 
 const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
-    // How many token1 per inputAmount token0
+    // How many token1 per token0
+
     const inputAmount = 1
 
     const amountIn = ethers.utils.parseUnits(
@@ -158,21 +167,62 @@ const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals
 
     const amountOut = ethers.utils.formatUnits(quotedAmountOut, tokenDecimals1)
 
-    console.log('=====================================================================')
+    /*console.log('=====================================================================')
     console.log(`${inputAmount} ${tokenSymbol0} can be swapped for ${amountOut} ${tokenSymbol1}`)
     console.log(new Date().toLocaleString());
-    console.log('=====================================================================')
+    console.log('=====================================================================')*/
 
-    setTimeout(function() {
-        getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
-
-        // Every 1 sec
-    }, 1000);
+    return amountOut
 
 }
 
+const getCandlestick = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+    // How many token1 per token0
+
+    setTimeout(function() {
+        let dateTime = new Date()
+        let open, close, high, low
+    
+        console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
+    
+        let loop = setTimeout(function() {
+            console.log('Pulling price...')
+            const currPrice = getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
+            if (new Date() - dateTime >= 60000) {
+                // Set close price, clear timeout and return values
+                close = currPrice
+    
+                console.log('=====================================================================')
+                console.log(`${token0} PRICE CANDLESTICK`)
+                console.log(`DateTime: ${dateTime.toLocaleString}`)
+                console.log(`Open: ${open} ${tokenSymbol1}`)
+                console.log(`High: ${high} ${tokenSymbol1}`)
+                console.log(`Low: ${low} ${tokenSymbol1}`)
+                console.log(`Close: ${close} ${tokenSymbol1}`)
+                console.log('=====================================================================')
+                
+                clearTimeout(loop)
+                return dateTime, open, close, high, low
+            } else {
+                if (typeof open === 'undefined' || open === null) {
+                    // Set open price
+                    open = currPrice
+                }
+                if (typeof high === 'undefined' || high === null || currPrice > high) {
+                    // Set high price
+                    high = currPrice
+                }
+                if (typeof low === 'undefined' || low === null || currPrice < low) {
+                    // Set low price
+                    low = currPrice
+                }
+            }
+        }, 1000); // Every 1s
+    }, 60000) // Every 60s
+}
+
 const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
-    // How many token1 per inputAmount token0
+    // How many USDC per ETH
     const inputAmount = 1
 
     const amountIn = ethers.utils.parseUnits(
@@ -199,31 +249,42 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
 
     setTimeout(function() {
         getPriceUsdcEth(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
+    }, 1000); // Every 1 sec
 
-        // Every 1 sec
-    }, 1000);
+}
 
+function startDelay() {
+    console.log('Starting...')
+    while(new Date().getSeconds() != 0) {
+        
+    }
+    console.log(`Time start: ${new Date().toLocaleString()}`)
 }
 
 /******************  MAIN ******************/
 
 // Pull prices for WBTC/ETH
-let quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth
+// startDelay()
+
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
-    [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
+    let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
+    getCandlestick(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
+})
+/*
+initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
+    let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
     getPrice(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
 })
 
+
 // Pull prices for USDC/ETH
-let quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
-    [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
+    let [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
     getPriceUsdcEth(quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth)
 })
 
 // Pull prices for WBTC/USDC
-let quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc
 initQuoterAndTokenPairsWbtcUsdc(poolAddressWbtcUsdc).then(result => {
-    [quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc] = result
+    let [quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc] = result
     getPrice(quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc)
-})
+})*/
