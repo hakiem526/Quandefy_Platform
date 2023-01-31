@@ -176,51 +176,6 @@ const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals
 
 }
 
-const getCandlestick = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
-    // How many token1 per token0
-
-    setTimeout(function() {
-        let dateTime = new Date()
-        let open, close, high, low
-    
-        console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
-    
-        let loop = setTimeout(function() {
-            console.log('Pulling price...')
-            const currPrice = getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
-            if (new Date() - dateTime >= 60000) {
-                // Set close price, clear timeout and return values
-                close = currPrice
-    
-                console.log('=====================================================================')
-                console.log(`${token0} PRICE CANDLESTICK`)
-                console.log(`DateTime: ${dateTime.toLocaleString}`)
-                console.log(`Open: ${open} ${tokenSymbol1}`)
-                console.log(`High: ${high} ${tokenSymbol1}`)
-                console.log(`Low: ${low} ${tokenSymbol1}`)
-                console.log(`Close: ${close} ${tokenSymbol1}`)
-                console.log('=====================================================================')
-                
-                clearTimeout(loop)
-                return dateTime, open, close, high, low
-            } else {
-                if (typeof open === 'undefined' || open === null) {
-                    // Set open price
-                    open = currPrice
-                }
-                if (typeof high === 'undefined' || high === null || currPrice > high) {
-                    // Set high price
-                    high = currPrice
-                }
-                if (typeof low === 'undefined' || low === null || currPrice < low) {
-                    // Set low price
-                    low = currPrice
-                }
-            }
-        }, 1000); // Every 1s
-    }, 60000) // Every 60s
-}
-
 const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
     // How many USDC per ETH
     const inputAmount = 1
@@ -253,6 +208,60 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
 
 }
 
+const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+    // How many token1 per token0
+
+    setInterval(function() {
+        let dateTime = new Date()
+        let open, close, high, low
+        let done = false
+    
+        console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
+    
+        let loop = setInterval(function() {
+            console.log('Pulling price...')
+            getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables).then(currPrice => {
+                console.log(`Current price = ${currPrice}`)
+                if (!done && new Date() - dateTime >= 60000) {
+                    // Set close price, clear timeout and return values
+                    done = true // prevents asynchronous calls from returning candlestick more than once
+
+                    clearInterval(loop)
+                    console.log('Setting close price...')
+                    close = currPrice
+        
+                    console.log('=====================================================================')
+                    console.log(`${tokenSymbol0} PRICE CANDLESTICK`)
+                    console.log(`DateTime: ${dateTime.toLocaleString()}`)
+                    console.log(`Open: ${open} ${tokenSymbol1}`)
+                    console.log(`High: ${high} ${tokenSymbol1}`)
+                    console.log(`Low: ${low} ${tokenSymbol1}`)
+                    console.log(`Close: ${close} ${tokenSymbol1}`)
+                    console.log('=====================================================================')
+                    
+                    return dateTime, open, close, high, low
+                } else {
+                    if (typeof open === 'undefined' || open === null) {
+                        // Set open price
+                        console.log('Setting open price...')
+                        open = currPrice
+                    }
+                    if (typeof high === 'undefined' || high === null || currPrice > high) {
+                        // Set high price
+                        console.log('Setting high price...')
+                        high = currPrice
+                    }
+                    if (typeof low === 'undefined' || low === null || currPrice < low) {
+                        // Set low price
+                        console.log('Setting low price...')
+                        low = currPrice
+                    }
+                }
+            })
+        }, 3000); // Every 3s
+    }, 60000) // Every 60s
+}
+
 function startDelay() {
     console.log('Starting...')
     while(new Date().getSeconds() != 0) {
@@ -268,7 +277,7 @@ function startDelay() {
 
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
     let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
-    getCandlestick(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
+    getCandlesticks(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
 })
 /*
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
