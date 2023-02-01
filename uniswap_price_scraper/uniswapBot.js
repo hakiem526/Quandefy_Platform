@@ -197,37 +197,35 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
 
     const outputAmount = inputAmount / amountOut
 
-    console.log('=====================================================================')
+    /*console.log('=====================================================================')
     console.log(`${inputAmount} ${tokenSymbol1} can be swapped for ${outputAmount} ${tokenSymbol0}`)
     console.log(new Date().toLocaleString());
-    console.log('=====================================================================')
+    console.log('=====================================================================')*/
 
-    setTimeout(function() {
-        getPriceUsdcEth(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables)
-    }, 1000); // Every 1 sec
+    return outputAmount
 
 }
 
-const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
+const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice) => {
     // How many token1 per token0
-
+    startDelay(tokenSymbol0, tokenSymbol1)
     setInterval(function() {
         let dateTime = new Date()
         let open, close, high, low
         let done = false
     
-        console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
+        //console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
     
         let loop = setInterval(function() {
-            console.log('Pulling price...')
+            //console.log('Pulling price...')
             getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables).then(currPrice => {
-                console.log(`Current price = ${currPrice}`)
+                //console.log(`Current price = ${currPrice}`)
                 if (!done && new Date() - dateTime >= 60000) {
                     // Set close price, clear timeout and return values
                     done = true // prevents asynchronous calls from returning candlestick more than once
 
                     clearInterval(loop)
-                    console.log('Setting close price...')
+                    //console.log('Setting close price...')
                     close = currPrice
         
                     console.log('=====================================================================')
@@ -243,17 +241,17 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
                 } else {
                     if (typeof open === 'undefined' || open === null) {
                         // Set open price
-                        console.log('Setting open price...')
+                        //console.log('Setting open price...')
                         open = currPrice
                     }
                     if (typeof high === 'undefined' || high === null || currPrice > high) {
                         // Set high price
-                        console.log('Setting high price...')
+                        //console.log('Setting high price...')
                         high = currPrice
                     }
                     if (typeof low === 'undefined' || low === null || currPrice < low) {
                         // Set low price
-                        console.log('Setting low price...')
+                        //console.log('Setting low price...')
                         low = currPrice
                     }
                 }
@@ -262,8 +260,8 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
     }, 60000) // Every 60s
 }
 
-function startDelay() {
-    console.log('Starting...')
+function startDelay(tokenSymbol0, tokenSymbol1) {
+    console.log(`Pulling prices for token pair ${tokenSymbol0}/${tokenSymbol1}...`)
     while(new Date().getSeconds() != 0) {
         
     }
@@ -273,27 +271,20 @@ function startDelay() {
 /******************  MAIN ******************/
 
 // Pull prices for WBTC/ETH
-// startDelay()
-
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
     let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
-    getCandlesticks(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
-})
-/*
-initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
-    let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
-    getPrice(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth)
+    getCandlesticks(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth, getPrice)
 })
 
 
 // Pull prices for USDC/ETH
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
     let [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
-    getPriceUsdcEth(quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth)
+    getCandlesticks(quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth, getPriceUsdcEth)
 })
 
 // Pull prices for WBTC/USDC
 initQuoterAndTokenPairsWbtcUsdc(poolAddressWbtcUsdc).then(result => {
     let [quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc] = result
-    getPrice(quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc)
-})*/
+    getCandlesticks(quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc, getPrice)
+})
