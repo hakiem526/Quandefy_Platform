@@ -208,7 +208,7 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
 
 const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice) => {
     // How many token1 per token0
-    startDelay(tokenSymbol0, tokenSymbol1)
+    startDelay()
     setInterval(function() {
         let dateTime = new Date()
         let open, close, high, low
@@ -225,6 +225,15 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
                     done = true // prevents asynchronous calls from returning candlestick more than once
 
                     clearInterval(loop)
+                    if (currPrice > high) {
+                        // Set high price
+                        high = currPrice
+                    }
+
+                    if (currPrice < low) {
+                        // Set low price
+                        low = currPrice
+                    }
                     //console.log('Setting close price...')
                     close = currPrice
         
@@ -260,8 +269,8 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
     }, 60000) // Every 60s
 }
 
-function startDelay(tokenSymbol0, tokenSymbol1) {
-    console.log(`Pulling prices for token pair ${tokenSymbol0}/${tokenSymbol1}...`)
+function startDelay() {
+    console.log(`Pulling prices...`)
     while(new Date().getSeconds() != 0) {
         
     }
@@ -280,7 +289,7 @@ initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
 // Pull prices for USDC/ETH
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
     let [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
-    getCandlesticks(quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth, getPriceUsdcEth)
+    getCandlesticks(quoterContractUsdcEth, tokenSymbol1UsdcEth, tokenSymbol0UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth, getPriceUsdcEth)
 })
 
 // Pull prices for WBTC/USDC
