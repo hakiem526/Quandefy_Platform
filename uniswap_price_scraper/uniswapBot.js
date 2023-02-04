@@ -167,13 +167,7 @@ const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals
 
     const amountOut = ethers.utils.formatUnits(quotedAmountOut, tokenDecimals1)
 
-    /*console.log('=====================================================================')
-    console.log(`${inputAmount} ${tokenSymbol0} can be swapped for ${amountOut} ${tokenSymbol1}`)
-    console.log(new Date().toLocaleString());
-    console.log('=====================================================================')*/
-
     return amountOut
-
 }
 
 const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
@@ -197,13 +191,7 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
 
     const outputAmount = inputAmount / amountOut
 
-    /*console.log('=====================================================================')
-    console.log(`${inputAmount} ${tokenSymbol1} can be swapped for ${outputAmount} ${tokenSymbol0}`)
-    console.log(new Date().toLocaleString());
-    console.log('=====================================================================')*/
-
     return outputAmount
-
 }
 
 const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice) => {
@@ -213,13 +201,9 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
         let dateTime = new Date()
         let open, close, high, low
         let done = false
-    
-        //console.log(`Getting candlestick for ${dateTime.toLocaleString()}...`)
-    
+        
         let loop = setInterval(function() {
-            //console.log('Pulling price...')
             getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables).then(currPrice => {
-                //console.log(`Current price = ${currPrice}`)
                 if (!done && new Date() - dateTime >= 60000) {
                     // Set close price, clear timeout and return values
                     done = true // prevents asynchronous calls from returning candlestick more than once
@@ -234,7 +218,6 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
                         // Set low price
                         low = currPrice
                     }
-                    //console.log('Setting close price...')
                     close = currPrice
         
                     console.log('=====================================================================')
@@ -250,17 +233,14 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
                 } else {
                     if (typeof open === 'undefined' || open === null) {
                         // Set open price
-                        //console.log('Setting open price...')
                         open = currPrice
                     }
                     if (typeof high === 'undefined' || high === null || currPrice > high) {
                         // Set high price
-                        //console.log('Setting high price...')
                         high = currPrice
                     }
                     if (typeof low === 'undefined' || low === null || currPrice < low) {
                         // Set low price
-                        //console.log('Setting low price...')
                         low = currPrice
                     }
                 }
