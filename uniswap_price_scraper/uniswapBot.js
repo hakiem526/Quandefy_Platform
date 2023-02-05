@@ -118,6 +118,17 @@ const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
     return [quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables]
 }
 
+/**
+ * Initializes Quoter instance and Contract instances of tokens for WBTC/USDC token pair. USDC symbol and decimals hardcoded.
+ * 
+ * @param {String} poolAddress Pool address of WBTC/USDC token pair on Uniswap
+ * @return {Contract} Contract instance of Quoter
+ * @return {String} Token symbol for WBTC
+ * @return {String} Token symbol for USDC
+ * @return {Number} Token decimals for WBTC
+ * @return {Number} Token decimals for USDC
+ * @return {var} Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
+*/
 const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
 
     console.log(`Initializing quoter and WBTC/USDC token pair...`)
@@ -135,20 +146,12 @@ const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
     )
 
     const tokenAddress0 = await poolContract.token0(); // WBTC
-    const tokenAddress1 = await poolContract.token1(); // ETH
 
     const tokenAbi0 = await getAbi(tokenAddress0) // WBTC
-    const tokenAbi1 = await getAbi(tokenAddress1) // ETH
 
     const tokenContract0 = new ethers.Contract(
         tokenAddress0,
         tokenAbi0,
-        provider
-    )
-
-    const tokenContract1 = new ethers.Contract(
-        tokenAddress1,
-        tokenAbi1,
         provider
     )
 
