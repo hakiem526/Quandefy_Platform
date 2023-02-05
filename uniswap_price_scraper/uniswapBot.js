@@ -1,4 +1,4 @@
-const { ethers } = require("ethers");
+const { ethers, Contract } = require("ethers");
 const { abi: IUniswapV3PoolABI } = require("@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json");
 const { abi: QuoterABI } = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json");
 
@@ -15,6 +15,18 @@ const poolAddressWbtcUsdc = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35' // WBTC
 
 const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
 
+
+/**
+ * Initializes Quoter instance and Contract instances of token of pairs.
+ * 
+ * @param {String} poolAddress Pool address of token pair on Uniswap
+ * @return {Contract} Contract instance of Quoter
+ * @return {String} Token symbol for token0
+ * @return {String} Token symbol for token1
+ * @return {Number} Token decimals for token0
+ * @return {Number} Token decimals for token1
+ * @return {var} Dict containing immutables token0, token1 and fee for ease of querying prices
+*/
 const initQuoterAndTokenPairs = async(poolAddress) => {
 
     console.log(`Initializing quoter and token pair for address ${poolAddress}...`)
