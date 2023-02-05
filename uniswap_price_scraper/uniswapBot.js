@@ -17,7 +17,7 @@ const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
 
 
 /**
- * Initializes Quoter instance and Contract instances of token of pairs.
+ * Initializes Quoter instance and Contract instances of tokens.
  * 
  * @param {String} poolAddress Pool address of token pair on Uniswap
  * @return {Contract} Contract instance of Quoter
@@ -25,7 +25,7 @@ const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
  * @return {String} Token symbol for token1
  * @return {Number} Token decimals for token0
  * @return {Number} Token decimals for token1
- * @return {var} Dict containing immutables token0, token1 and fee for ease of querying prices
+ * @return {var} Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
 */
 const initQuoterAndTokenPairs = async(poolAddress) => {
 
@@ -71,6 +71,17 @@ const initQuoterAndTokenPairs = async(poolAddress) => {
     return [quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables]
 }
 
+/**
+ * Initializes Quoter instance and Contract instances of tokens for USDC/ETH token pair. USDC symbol and decimals hardcoded.
+ * 
+ * @param {String} poolAddress Pool address of USDC/ETH token pair on Uniswap
+ * @return {Contract} Contract instance of Quoter
+ * @return {String} Token symbol for USDC
+ * @return {String} Token symbol for ETH
+ * @return {Number} Token decimals for USDC
+ * @return {Number} Token decimals for ETH
+ * @return {var} Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
+*/
 const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
 
     console.log(`Initializing quoter and USDC/ETH token pair...`)
@@ -87,17 +98,9 @@ const initQuoterAndTokenPairsUsdcEth = async(poolAddress) => {
         provider
     )
 
-    const tokenAddress0 = await poolContract.token0(); // WBTC
     const tokenAddress1 = await poolContract.token1(); // ETH
 
-    const tokenAbi0 = await getAbi(tokenAddress0) // WBTC
     const tokenAbi1 = await getAbi(tokenAddress1) // ETH
-
-    const tokenContract0 = new ethers.Contract(
-        tokenAddress0,
-        tokenAbi0,
-        provider
-    )
 
     const tokenContract1 = new ethers.Contract(
         tokenAddress1,
