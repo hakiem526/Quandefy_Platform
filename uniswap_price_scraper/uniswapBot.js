@@ -165,8 +165,17 @@ const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
     return [quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables]
 }
 
-const getPrice = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
-    // How many token1 per token0
+/**
+ * Queries Uniswap to get price of token. To be used after initializing Quoter and Contracts for token pairs.
+ * Cannot be used with token pairs containing USDC.
+ * 
+ * @param {Contract} quoterContract Instance of Quoter Contract
+ * @param {Number} tokenDecimals0 Decimals for token0
+ * @param {Number} tokenDecimals1 Decimals for token1
+ * @param {var} immutables Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
+ * @return {Contract} Amount of token1 per token0
+*/
+const getPrice = async(quoterContract, tokenDecimals0, tokenDecimals1, immutables) => {
 
     const inputAmount = 1
 
@@ -221,7 +230,7 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
         let done = false
         
         let loop = setInterval(function() {
-            getPrice(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables).then(currPrice => {
+            getPrice(quoterContract, tokenDecimals0, tokenDecimals1, immutables).then(currPrice => {
                 if (!done && new Date() - dateTime >= 60000) {
                     // Set close price, clear timeout and return values
                     done = true // prevents asynchronous calls from returning candlestick more than once
