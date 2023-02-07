@@ -167,7 +167,7 @@ const initQuoterAndTokenPairsWbtcUsdc = async(poolAddress) => {
 
 /**
  * Queries Uniswap to get price of token. To be used after initializing Quoter and Contracts for token pairs.
- * Cannot be used with token pairs containing USDC.
+ * Cannot be used with token pairs where token0 is USDC.
  * 
  * @param {Contract} quoterContract Instance of Quoter Contract
  * @param {Number} tokenDecimals0 Decimals for token0
@@ -197,8 +197,17 @@ const getPrice = async(quoterContract, tokenDecimals0, tokenDecimals1, immutable
     return amountOut
 }
 
-const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables) => {
-    // How many USDC per ETH
+/**
+ * Queries Uniswap to get price of ETH in USDC. To be used after initializing Quoter and Contracts for token pair using initQuoterAndTokenPairsUsdcEth()
+ * 
+ * @param {Contract} quoterContract Instance of Quoter Contract
+ * @param {Number} tokenDecimals0 Decimals for USDC
+ * @param {Number} tokenDecimals1 Decimals for ETH
+ * @param {var} immutables Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
+ * @return {Contract} Amount of USDC per ETH
+*/
+const getPriceUsdcEth = async(quoterContract, tokenDecimals0, tokenDecimals1, immutables) => {
+
     const inputAmount = 1
 
     const amountIn = ethers.utils.parseUnits(
@@ -221,8 +230,19 @@ const getPriceUsdcEth = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
     return outputAmount
 }
 
+/**
+ * Get current one minute candlestick (open, high, low, close prices) by querying prices from Uniswap every 3s, then push to database.
+ * 
+ * @param {Contract} quoterContract Instance of Quoter Contract
+ * @param {Number} tokenSymbol0 Symbol for token0
+ * @param {Number} tokenSymbol1 Symbol for token1
+ * @param {Number} tokenDecimals0 Decimals for token0
+ * @param {Number} tokenDecimals1 Decimals for token1
+ * @param {var} immutables Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
+ * @param {Function} getPrice Function used to query price of token from Uniswap
+*/
 const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice) => {
-    // How many token1 per token0
+    
     startDelay()
     setInterval(function() {
         let dateTime = new Date()
@@ -276,6 +296,9 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
     }, 60000) // Every 60s
 }
 
+/**
+ * Used to delay runtime such that first price is queried at the start of the minute. 
+*/
 function startDelay() {
     console.log(`Pulling prices...`)
     while(new Date().getSeconds() != 0) {
