@@ -17,14 +17,14 @@ const poolAddressWbtcUsdc = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35'; // WBT
 const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 
 /******************  INIT SQL VARIABLES ******************/
-const mysql = require("mysql2");
+const mysql = require("mysql");
 
 const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PW,
     database: process.env.DB_NAME,
-    socketPath: `/cloudsql${process.env.INSTANCE_CONNECTION_NAME}`
-}).promise();
+    socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`
+});
 
 /**
  * Initializes Quoter instance and Contract instances of tokens.
