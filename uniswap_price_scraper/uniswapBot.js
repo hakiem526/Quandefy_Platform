@@ -1,20 +1,30 @@
+/******************  INIT WEB3 VARIABLES ******************/
 const { ethers, Contract } = require("ethers");
 const { abi: IUniswapV3PoolABI } = require("@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json");
 const { abi: QuoterABI } = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json");
 
-const { getAbi, getPoolImmutables } = require('./helpers')
+const { getAbi, getPoolImmutables } = require('./helpers');
 
-require('dotenv').config()
-const INFURA_URL = process.env.INFURA_URL
+require('dotenv').config();
+const INFURA_URL = process.env.INFURA_URL;
 
-const provider = new ethers.providers.JsonRpcProvider(INFURA_URL)
+const provider = new ethers.providers.JsonRpcProvider(INFURA_URL);
 
-const poolAddressWbtcEth = '0x4585fe77225b41b697c938b018e2ac67ac5a20c0' // WBTC/ETH pool
-const poolAddressUsdcEth = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640' // USDC/ETH
-const poolAddressWbtcUsdc = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35' // WBTC/USDC
+const poolAddressWbtcEth = '0x4585fe77225b41b697c938b018e2ac67ac5a20c0'; // WBTC/ETH pool
+const poolAddressUsdcEth = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'; // USDC/ETH
+const poolAddressWbtcUsdc = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35'; // WBTC/USDC
 
-const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
+const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 
+/******************  INIT SQL VARIABLES ******************/
+const mysql = require("mysql2");
+
+const pool = mysql.createPool({
+    user: process.env.DB_USER,
+    password: process.env.DB_PW,
+    database: process.env.DB_NAME,
+    socketPath: `/cloudsql${process.env.INSTANCE_CONNECTION_NAME}`
+}).promise();
 
 /**
  * Initializes Quoter instance and Contract instances of tokens.
@@ -231,7 +241,7 @@ const getPriceUsdcEth = async(quoterContract, tokenDecimals0, tokenDecimals1, im
 }
 
 /**
- * Get current one minute candlestick (open, high, low, close prices) by querying prices from Uniswap every 3s, then push to database.
+ * Get current one minute candlestick (open, high, low, close prices) by querying prices from Uniswap every 3s, then push to cloud sql database.
  * 
  * @param {Contract} quoterContract Instance of Quoter Contract
  * @param {Number} tokenSymbol0 Symbol for token0
@@ -240,8 +250,9 @@ const getPriceUsdcEth = async(quoterContract, tokenDecimals0, tokenDecimals1, im
  * @param {Number} tokenDecimals1 Decimals for token1
  * @param {var} immutables Dict containing immutables token_symbol0, token_symbol1 and fee for ease of querying prices
  * @param {Function} getPrice Function used to query price of token from Uniswap
+ * @param {Function} sqlTableName Name of table in database instance to store candlestick
 */
-const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice) => {
+const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice, sqlTableName) => {
     
     startDelay()
     setInterval(function() {
@@ -266,14 +277,14 @@ const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenD
                         low = currPrice
                     }
                     close = currPrice
-        
-                    console.log('=====================================================================')
+                    
                     console.log(`${tokenSymbol0} PRICE CANDLESTICK`)
                     console.log(`DateTime: ${dateTime.toLocaleString()}`)
                     console.log(`Open: ${open} ${tokenSymbol1}`)
                     console.log(`High: ${high} ${tokenSymbol1}`)
                     console.log(`Low: ${low} ${tokenSymbol1}`)
                     console.log(`Close: ${close} ${tokenSymbol1}`)
+                    pushCandlestickToDatabase(sqlTableName, dateTime, open, high, low, close)
                     console.log('=====================================================================')
                     
                     return dateTime, open, close, high, low
@@ -307,23 +318,40 @@ function startDelay() {
     console.log(`Time start: ${new Date().toLocaleString()}`)
 }
 
+/**
+ * Pushes candlestick to a table in the connected database.
+ * 
+ * @param {String} tableName Name of table in database instance
+ * @param {Date} timestamp Timestamp for candlestick
+ * @param {Number} open Open price
+ * @param {Number} high High price
+ * @param {Number} low Low price
+ * @param {Number} close Close price
+*/
+async function pushCandlestickToDatabase(tableName, timestamp, open, high, low, close) {
+    await pool.query(`
+    INSERT INTO ${tableName} (timestamp, open, high, low, close)
+    VALUES (?, ?, ?, ?, ?)
+    `, [timestamp, open, high, low, close])
+    console.log(`Pushed candlestick to table ${tableName}`)
+}
+
 /******************  MAIN ******************/
 
 // Pull prices for WBTC/ETH
 initQuoterAndTokenPairs(poolAddressWbtcEth).then(result => {
     let [quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth] = result
-    getCandlesticks(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth, getPrice)
+    getCandlesticks(quoterContractWbtcEth, tokenSymbol0WbtcEth, tokenSymbol1WbtcEth, tokenDecimals0WbtcEth, tokenDecimals1WbtcEth, immutablesWbtcEth, getPrice, "WBTCETH")
 })
-
 
 // Pull prices for USDC/ETH
 initQuoterAndTokenPairsUsdcEth(poolAddressUsdcEth).then(result => {
     let [quoterContractUsdcEth, tokenSymbol0UsdcEth, tokenSymbol1UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth] = result
-    getCandlesticks(quoterContractUsdcEth, tokenSymbol1UsdcEth, tokenSymbol0UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth, getPriceUsdcEth)
+    getCandlesticks(quoterContractUsdcEth, tokenSymbol1UsdcEth, tokenSymbol0UsdcEth, tokenDecimals0UsdcEth, tokenDecimals1UsdcEth, immutablesUsdcEth, getPriceUsdcEth, "USDCETH")
 })
 
 // Pull prices for WBTC/USDC
 initQuoterAndTokenPairsWbtcUsdc(poolAddressWbtcUsdc).then(result => {
     let [quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc] = result
-    getCandlesticks(quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc, getPrice)
+    getCandlesticks(quoterContractWbtcUsdc, tokenSymbol0WbtcUsdc, tokenSymbol1WbtcUsdc, tokenDecimals0WbtcUsdc, tokenDecimals1WbtcUsdc, immutablesWbtcUsdc, getPrice, "WBTCUSDC")
 })
