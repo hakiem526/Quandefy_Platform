@@ -254,7 +254,7 @@ const getPriceUsdcEth = async(quoterContract, tokenDecimals0, tokenDecimals1, im
 */
 const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice, sqlTableName) => {
     
-    startDelay()
+    //startDelay()
     setInterval(function() {
         let dateTime = new Date()
         let open, close, high, low
@@ -329,11 +329,16 @@ function startDelay() {
  * @param {Number} close Close price
 */
 async function pushCandlestickToDatabase(tableName, timestamp, open, high, low, close) {
-    await pool.query(`
-    INSERT INTO ${tableName} (timestamp, open, high, low, close)
-    VALUES (?, ?, ?, ?, ?)
-    `, [timestamp, open, high, low, close])
-    console.log(`Pushed candlestick to table ${tableName}`)
+    await pool.query(
+    'INSERT INTO ' + tableName + ' (timestamp, open, high, low, close) VALUES (?, ?, ?, ?, ?)'
+    , [timestamp, open, high, low, close], (err, result) => {
+        if(err) {
+            throw err;
+        } else {
+            console.log(result);
+            console.log(`Pushed candlestick to table ${tableName}`)
+        }
+    })
 }
 
 /******************  MAIN ******************/
