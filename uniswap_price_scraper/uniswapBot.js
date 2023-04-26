@@ -17,13 +17,14 @@ const poolAddressWbtcUsdc = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35'; // WBT
 const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 
 /******************  INIT SQL VARIABLES ******************/
-const mysql = require("mysql");
+const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
+    host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PW,
     database: process.env.DB_NAME,
-    socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`
+    port: process.env.PORT
 });
 
 /**
@@ -254,7 +255,7 @@ const getPriceUsdcEth = async(quoterContract, tokenDecimals0, tokenDecimals1, im
 */
 const getCandlesticks = async(quoterContract, tokenSymbol0, tokenSymbol1, tokenDecimals0, tokenDecimals1, immutables, getPrice, sqlTableName) => {
     
-    //startDelay()
+    startDelay()
     setInterval(function() {
         let dateTime = new Date()
         let open, close, high, low
